@@ -72,6 +72,77 @@
             </div>
         </div>
     </div>
+    <script src="./libs/http.js"></script>
+
+    <!-- 文章列表模板 -->
+    <script id="art_list" type="text/html">
+        {{ each data.data v }}
+        <tr>
+            <td>{{ v.title }}</td>
+            <td>{{ v.author }}</td>
+            <td>{{ v.category }}</td>
+            <td class="text-center">{{ v.date }}</td>
+            <td class="text-center">{{ v.state }}</td>
+            <td class="text-center">
+                <a href="article_edit.html?id={{ v.id }}" class="btn btn-default btn-xs">编辑</a>
+                <a href="javascript:void(0);" data-id="{{ v.id }}" class="btn btn-danger btn-xs delete">删除</a>
+            </td>
+        </tr>
+        {{ /each }}
+    </script>
+    <!-- 分类列表模板 -->
+    <script id="cat_list" type="text/html">
+        <option value="">所有分类</option>
+        {{ each data v }}
+        <option value="{{ v.id }}">{{ v.name }}</option>
+        {{ /each }}
+    </script>
+    <script>
+        // 入口函数
+        $(function () {
+            // 0.加载所有文章分类
+            // 注意点： 用户需要看到分类的名称，但是服务器需要分类的id
+            // 问题 ： 如何做到，用户显示的是分类的名称，但是代码 val()获取的是id
+            $.ajax({
+                url: BigNew.category_list,
+                type: 'get',
+                dataType: 'json',
+                data: '',
+                success: function (backData) {
+                    console.log(backData);
+                    // 模板引擎渲染页面
+                    $('#selCategory').html(template('cat_list', backData))
+                }
+            });
+
+            // 筛选按钮点击事件
+            $('#btnSearch').on('click', function (e) {
+                // 阻止form表单默认行为
+                e.preventDefault();
+                // ajax 请求文章列表
+                $.ajax({
+                    url: BigNew.article_query,
+                    type: 'get',
+                    dataType: 'json',
+                    data: {
+                        type: $('#selCategory').val(),
+                        state: $('#selStatus').val(),
+                        page: 1,
+                        perpage: 10,
+                    },
+                    success: function (backData) {
+                        console.log(backData);
+                        // 模板引擎渲染页面
+                        $('.table>tbody').html(template('art_list', backData))
+                    }
+                });
+            })
+            // 页面一加载: 请求所有文章列表: 主动触发筛选按钮点击事件
+            $('#btnSearch').trigger('click');
+
+        })
+    </script>
+
 </body>
 
 </html>
